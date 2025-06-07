@@ -1,18 +1,19 @@
 const oracledb = require('oracledb');
+require('dotenv').config();
 
 const dbConfig = {
-    user: process.env.DB_USER,
-    password: process.env.DB_PASSWORD,
-    connectString: process.env.DB_CONNECT_STRING
+    user: process.env.ORACLE_USER,
+    password: process.env.ORACLE_PASSWORD,
+    connectString: process.env.ORACLE_CONNECT_STRING
 };
 
 async function getConnection() {
     try {
         const connection = await oracledb.getConnection(dbConfig);
         return connection;
-    } catch (err) {
-        console.error('Error getting database connection:', err);
-        throw err;
+    } catch (error) {
+        console.error('Error getting connection:', error);
+        throw error;
     }
 }
 
