@@ -1,76 +1,62 @@
-const oracledb = require('oracledb');
-const { getConnection } = require('../config/database');
+const { khoa } = require('../config/mockDatabase');
 
 class Khoa {
-    static async findAll() {
-        let connection;
+    static async findAll(searchParams = {}) {
         try {
-            connection = await getConnection();
-            const result = await connection.execute(
-                `SELECT MAKHOA as "maKhoa", TENKHOA as "tenKhoa" FROM Khoa`,
-                [],
-                { outFormat: oracledb.OUT_FORMAT_OBJECT }
-            );
-            return result.rows;
+            // Simulate database delay
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            let filteredKhoa = [...khoa];
+
+            // Search by maKhoa
+            if (searchParams.maKhoa) {
+                filteredKhoa = filteredKhoa.filter(k =>
+                    k.maKhoa.toLowerCase().includes(searchParams.maKhoa.toLowerCase())
+                );
+            }
+
+            // Search by tenKhoa
+            if (searchParams.tenKhoa) {
+                filteredKhoa = filteredKhoa.filter(k =>
+                    k.tenKhoa.toLowerCase().includes(searchParams.tenKhoa.toLowerCase())
+                );
+            }
+
+            return filteredKhoa;
         } catch (err) {
             throw err;
-        } finally {
-            if (connection) {
-                try {
-                    await connection.close();
-                } catch (err) {
-                    console.error(err);
-                }
-            }
         }
     }
 
     static async findById(maKhoa) {
-        let connection;
         try {
-            connection = await getConnection();
-            const result = await connection.execute(
-                `SELECT MAKHOA as "maKhoa", TENKHOA as "tenKhoa" 
-                 FROM Khoa 
-                 WHERE MAKHOA = :maKhoa`,
-                [maKhoa],
-                { outFormat: oracledb.OUT_FORMAT_OBJECT }
-            );
-            return result.rows[0];
+            // Simulate database delay
+            await new Promise(resolve => setTimeout(resolve, 100));
+            return khoa.find(k => k.maKhoa === maKhoa) || null;
         } catch (err) {
             throw err;
-        } finally {
-            if (connection) {
-                try {
-                    await connection.close();
-                } catch (err) {
-                    console.error(err);
-                }
-            }
         }
     }
 
     static async create(khoaData) {
-        let connection;
         try {
-            connection = await getConnection();
-            const result = await connection.execute(
-                `INSERT INTO Khoa (MAKHOA, TENKHOA) 
-                 VALUES (:maKhoa, :tenKhoa)`,
-                [khoaData.maKhoa, khoaData.tenKhoa],
-                { autoCommit: true }
-            );
-            return result;
+            // Simulate database delay
+            await new Promise(resolve => setTimeout(resolve, 100));
+
+            // Check if maKhoa already exists
+            if (khoa.some(k => k.maKhoa === khoaData.maKhoa)) {
+                throw new Error('Mã khoa đã tồn tại');
+            }
+
+            const newKhoa = {
+                maKhoa: khoaData.maKhoa,
+                tenKhoa: khoaData.tenKhoa
+            };
+
+            khoa.push(newKhoa);
+            return newKhoa;
         } catch (err) {
             throw err;
-        } finally {
-            if (connection) {
-                try {
-                    await connection.close();
-                } catch (err) {
-                    console.error(err);
-                }
-            }
         }
     }
 

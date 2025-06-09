@@ -4,11 +4,11 @@ const { getConnection } = require('../config/database');
 class Student {
     static async generateNextMaSV(connection) {
         let query = `SELECT MASV FROM SINHVIEN ORDER BY MASV DESC FETCH FIRST 1 ROW ONLY`;
-        
+
         try {
             const result = await connection.execute(
                 query,
-                [], 
+                [],
                 { outFormat: oracledb.OUT_FORMAT_OBJECT }
             );
 
@@ -29,28 +29,111 @@ class Student {
         }
     }
 
-    static async create(student) {
+    static async findAll(searchParams = {}) {
         let connection;
         try {
             connection = await getConnection();
 
-            const newMaSV = await this.generateNextMaSV(connection);
+            let query = `
+                SELECT sv.MASV AS "maSV", 
+                       sv.HOTEN AS "hoTen", 
+                       sv.NGAYSINH AS "ngaySinh", 
+                       sv.GIOITINH AS "gioiTinh", 
+                       sv.MALOP AS "maLop", 
+                       l.TENLOP AS "tenLop", 
+                       k.TENKHOA AS "tenKhoa" 
+                FROM SINHVIEN sv 
+                LEFT JOIN LOP l ON sv.MALOP = l.MALOP 
+                LEFT JOIN KHOA k ON l.MAKHOA = k.MAKHOA
+                WHERE 1=1
+            `;
 
+            const bindParams = {};
+
+            if (searchParams.maSV) {
+                query += ` AND LOWER(sv.MASV) LIKE LOWER(:maSV)`;
+                bindParams.maSV = `%${searchParams.maSV}%`;
+            }
+
+            if (searchParams.hoTen) {
+                query += ` AND LOWER(sv.HOTEN) LIKE LOWER(:hoTen)`;
+                bindParams.hoTen = `%${searchParams.hoTen}%`;
+            }
+
+            if (searchParams.maLop) {
+                query += ` AND LOWER(sv.MALOP) LIKE LOWER(:maLop)`;
+                bindParams.maLop = `%${searchParams.maLop}%`;
+            }
+
+            const result = await connection.execute(
+                query,
+                bindParams,
+                { outFormat: oracledb.OUT_FORMAT_OBJECT }
+            );
+
+            return result.rows || [];
+        } catch (error) {
+            console.error('Error finding students:', error);
+            throw error;
+        } finally {
+            if (connection) {
+                await connection.close();
+            }
+        }
+    }
+
+    static async findById(maSV) {
+        let connection;
+        try {
+            connection = await getConnection();
+            const result = await connection.execute(
+                `SELECT sv.MASV AS "maSV", 
+                        sv.HOTEN AS "hoTen", 
+                        sv.NGAYSINH AS "ngaySinh", 
+                        sv.GIOITINH AS "gioiTinh", 
+                        sv.MALOP AS "maLop", 
+                        l.TENLOP AS "tenLop", 
+                        k.TENKHOA AS "tenKhoa" 
+                 FROM SINHVIEN sv 
+                 LEFT JOIN LOP l ON sv.MALOP = l.MALOP 
+                 LEFT JOIN KHOA k ON l.MAKHOA = k.MAKHOA 
+                 WHERE sv.MASV = :maSV`,
+                { maSV },
+                { outFormat: oracledb.OUT_FORMAT_OBJECT }
+            );
+            return result.rows && result.rows.length > 0 ? result.rows[0] : null;
+        } catch (error) {
+            console.error('Error finding student:', error);
+            throw error;
+        } finally {
+            if (connection) {
+                await connection.close();
+            }
+        }
+    }
+
+    static async create(student) {
+        let connection;
+        try {
+            connection = await getConnection();
             const ngaySinhDate = student.ngaySinh ? new Date(student.ngaySinh) : null;
 
             const result = await connection.execute(
                 `INSERT INTO SINHVIEN (MASV, HOTEN, NGAYSINH, GIOITINH, MALOP) 
-                 VALUES (:masv, :hoten, :ngaysinh, :gioitinh, :malop)`,
+                 VALUES (:maSV, :hoTen, :ngaySinh, :gioiTinh, :maLop)`,
                 {
-                    masv: newMaSV, // Use generated maSV
-                    hoten: student.hoTen,
-                    ngaysinh: ngaySinhDate, 
-                    gioitinh: student.gioiTinh,
-                    malop: student.maLop
+                    maSV: student.maSV,
+                    hoTen: student.hoTen,
+                    ngaySinh: ngaySinhDate,
+                    gioiTinh: student.gioiTinh,
+                    maLop: student.maLop
                 },
                 { autoCommit: true }
             );
-            return { maSV: newMaSV, ...student };
+            return { ...student };
+        } catch (error) {
+            console.error('Error creating student:', error);
+            throw error;
         } finally {
             if (connection) {
                 await connection.close();
@@ -66,23 +149,26 @@ class Student {
 
             const result = await connection.execute(
                 `UPDATE SINHVIEN 
-                 SET HOTEN = :hoten, 
-                     NGAYSINH = :ngaysinh, 
-                     GIOITINH = :gioitinh, 
-                     MALOP = :malop 
-                 WHERE MASV = :masv`,
+                 SET HOTEN = :hoTen, 
+                     NGAYSINH = :ngaySinh, 
+                     GIOITINH = :gioiTinh, 
+                     MALOP = :maLop 
+                 WHERE MASV = :maSV`,
                 {
-                    masv: maSV,
-                    hoten: student.hoTen,
-                    ngaysinh: ngaySinhDate, 
-                    gioitinh: student.gioiTinh,
-                    malop: student.maLop
+                    maSV,
+                    hoTen: student.hoTen,
+                    ngaySinh: ngaySinhDate,
+                    gioiTinh: student.gioiTinh,
+                    maLop: student.maLop
                 },
                 { autoCommit: true }
             );
-            return result;
+            return { maSV, ...student };
+        } catch (error) {
+            console.error('Error updating student:', error);
+            throw error;
         } finally {
-             if (connection) {
+            if (connection) {
                 await connection.close();
             }
         }
@@ -93,54 +179,16 @@ class Student {
         try {
             connection = await getConnection();
             const result = await connection.execute(
-                'DELETE FROM SINHVIEN WHERE MASV = :masv',
-                { masv: maSV },
+                'DELETE FROM SINHVIEN WHERE MASV = :maSV',
+                { maSV },
                 { autoCommit: true }
             );
-            return result;
+            return { maSV };
+        } catch (error) {
+            console.error('Error deleting student:', error);
+            throw error;
         } finally {
-             if (connection) {
-                await connection.close();
-            }
-        }
-    }
-
-    static async findById(maSV) {
-        let connection;
-        try {
-            connection = await getConnection();
-            const result = await connection.execute(
-                `SELECT sv.MASV AS "maSV", sv.HOTEN AS "hoTen", sv.NGAYSINH AS "ngaySinh", sv.GIOITINH AS "gioiTinh", sv.MALOP AS "maLop", l.TENLOP AS "tenLop", k.TENKHOA AS "tenKhoa" 
-                 FROM SINHVIEN sv 
-                 LEFT JOIN LOP l ON sv.MALOP = l.MALOP 
-                 LEFT JOIN KHOA k ON l.MAKHOA = k.MAKHOA 
-                 WHERE sv.MASV = :masv`,
-                { masv: maSV },
-                { outFormat: oracledb.OUT_FORMAT_OBJECT }
-            );
-            return result.rows && result.rows.length > 0 ? result.rows[0] : null;
-        } finally {
-             if (connection) {
-                await connection.close();
-            }
-        }
-    }
-
-    static async findAll() {
-        let connection;
-        try {
-            connection = await getConnection();
-            const result = await connection.execute(
-                `SELECT sv.MASV AS "maSV", sv.HOTEN AS "hoTen", sv.NGAYSINH AS "ngaySinh", sv.GIOITINH AS "gioiTinh", sv.MALOP AS "maLop", l.TENLOP AS "tenLop", k.TENKHOA AS "tenKhoa" 
-                 FROM SINHVIEN sv 
-                 LEFT JOIN LOP l ON sv.MALOP = l.MALOP 
-                 LEFT JOIN KHOA k ON l.MAKHOA = k.MAKHOA`,
-                 [], // no bind variables
-                { outFormat: oracledb.OUT_FORMAT_OBJECT }
-            );
-            return result.rows || [];
-        } finally {
-             if (connection) {
+            if (connection) {
                 await connection.close();
             }
         }
@@ -160,7 +208,7 @@ class Student {
             );
             return result.rows || [];
         } finally {
-             if (connection) {
+            if (connection) {
                 await connection.close();
             }
         }
@@ -180,7 +228,7 @@ class Student {
             );
             return result.rows || [];
         } finally {
-             if (connection) {
+            if (connection) {
                 await connection.close();
             }
         }

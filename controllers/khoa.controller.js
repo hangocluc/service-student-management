@@ -2,15 +2,24 @@ const Khoa = require('../models/khoa.model');
 
 exports.getAllKhoa = async (req, res) => {
     try {
-        const khoaList = await Khoa.findAll();
+        const searchParams = {
+            maKhoa: req.query.maKhoa,
+            tenKhoa: req.query.tenKhoa
+        };
+
+        const khoaList = await Khoa.findAll(searchParams);
         res.json({
-            status: 'success',
+            success: true,
+            code: 200,
+            message: null,
             data: khoaList
         });
     } catch (error) {
         res.status(500).json({
-            status: 'error',
-            message: error.message
+            success: false,
+            code: 500,
+            message: error.message,
+            data: null
         });
     }
 };
@@ -20,18 +29,24 @@ exports.getKhoaById = async (req, res) => {
         const khoa = await Khoa.findById(req.params.maKhoa);
         if (!khoa) {
             return res.status(404).json({
-                status: 'error',
-                message: 'Khoa not found'
+                success: false,
+                code: 404,
+                message: 'Khoa not found',
+                data: null
             });
         }
         res.json({
-            status: 'success',
+            success: true,
+            code: 200,
+            message: null,
             data: khoa
         });
     } catch (error) {
         res.status(500).json({
-            status: 'error',
-            message: error.message
+            success: false,
+            code: 500,
+            message: error.message,
+            data: null
         });
     }
 };
@@ -41,20 +56,25 @@ exports.createKhoa = async (req, res) => {
         const { maKhoa, tenKhoa } = req.body;
         if (!maKhoa || !tenKhoa) {
             return res.status(400).json({
-                status: 'error',
-                message: 'maKhoa and tenKhoa are required'
+                success: false,
+                code: 400,
+                message: 'maKhoa and tenKhoa are required',
+                data: null
             });
         }
         const result = await Khoa.create({ maKhoa, tenKhoa });
         res.status(201).json({
-            status: 'success',
+            success: true,
+            code: 201,
             message: 'Khoa created successfully',
             data: result
         });
     } catch (error) {
         res.status(500).json({
-            status: 'error',
-            message: error.message
+            success: false,
+            code: 500,
+            message: error.message,
+            data: null
         });
     }
 };

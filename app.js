@@ -3,8 +3,10 @@ const cors = require('cors');
 const studentRoutes = require('./routes/student.routes');
 const khoaRoutes = require('./routes/khoa.routes');
 const lopRoutes = require('./routes/lop.routes');
+const authRoutes = require('./routes/auth.routes');
 
 const app = express();
+const PORT = process.env.PORT || 3001;
 
 // Middleware
 app.use(cors());
@@ -15,6 +17,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api/students', studentRoutes);
 app.use('/api/khoa', khoaRoutes);
 app.use('/api/lop', lopRoutes);
+app.use('/api/auth', authRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
@@ -27,12 +30,9 @@ app.use((err, req, res, next) => {
     });
 });
 
-const PORT = 3000;
+// Start server
+app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+});
 
-try {
-    app.listen(PORT, () => {
-        console.log(`Server is running on port ${PORT}`);
-    });
-} catch (error) {
-    console.error('Failed to start server:', error);
-} 
+module.exports = app; 

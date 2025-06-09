@@ -4,10 +4,10 @@ exports.createStudent = async (req, res) => {
     try {
         const student = req.body;
         const result = await Student.create(student);
-        res.status(200).json({
+        res.status(201).json({
             success: true,
-            code: 200,
-            message: null,
+            code: 201,
+            message: 'Student created successfully',
             data: result
         });
     } catch (error) {
@@ -28,7 +28,7 @@ exports.updateStudent = async (req, res) => {
         res.status(200).json({
             success: true,
             code: 200,
-            message: null,
+            message: 'Student updated successfully',
             data: result
         });
     } catch (error) {
@@ -48,7 +48,7 @@ exports.deleteStudent = async (req, res) => {
         res.status(200).json({
             success: true,
             code: 200,
-            message: null,
+            message: 'Student deleted successfully',
             data: result
         });
     } catch (error) {
@@ -91,7 +91,13 @@ exports.getStudent = async (req, res) => {
 
 exports.getAllStudents = async (req, res) => {
     try {
-        const students = await Student.findAll();
+        const searchParams = {
+            maSV: req.query.maSV,
+            hoTen: req.query.hoTen,
+            maLop: req.query.maLop
+        };
+
+        const students = await Student.findAll(searchParams);
         res.status(200).json({
             success: true,
             code: 200,
@@ -106,8 +112,7 @@ exports.getAllStudents = async (req, res) => {
             data: null
         });
     }
-}; 
-
+};
 
 exports.getStudentScores = async (req, res) => {
     try {
@@ -127,8 +132,7 @@ exports.getStudentScores = async (req, res) => {
             data: null
         });
     }
-}; 
-
+};
 
 exports.getStudentCourses = async (req, res) => {
     try {
