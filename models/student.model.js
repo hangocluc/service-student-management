@@ -193,46 +193,6 @@ class Student {
             }
         }
     }
-
-    static async getStudentScores(maSV) {
-        let connection;
-        try {
-            connection = await getConnection();
-            const result = await connection.execute(
-                `SELECT d.MASV AS "maSV", d.MAMH AS "maMH", d.DIEM AS "diem", d.HOCKY AS "hocKy", d.NAMHOC AS "namHoc", m.TENMH AS "tenMH", m.SOTINCHI AS "soTinChi" 
-                 FROM DIEM d 
-                 JOIN MONHOC m ON d.MAMH = m.MAMH 
-                 WHERE d.MASV = :masv`,
-                { masv: maSV },
-                { outFormat: oracledb.OUT_FORMAT_OBJECT }
-            );
-            return result.rows || [];
-        } finally {
-            if (connection) {
-                await connection.close();
-            }
-        }
-    }
-
-    static async getStudentCourses(maSV) {
-        let connection;
-        try {
-            connection = await getConnection();
-            const result = await connection.execute(
-                `SELECT dk.ID AS "id", dk.MASV AS "maSV", dk.MAMON AS "maMon", dk.HOCKY AS "hocKy", dk.NAMHOC AS "namHoc", m.TENMH AS "tenMH", m.SOTINCHI AS "soTinChi" 
-                 FROM DANGKYMONHOC dk 
-                 JOIN MONHOC m ON dk.MAMON = m.MAMH 
-                 WHERE dk.MASV = :masv`,
-                { masv: maSV },
-                { outFormat: oracledb.OUT_FORMAT_OBJECT }
-            );
-            return result.rows || [];
-        } finally {
-            if (connection) {
-                await connection.close();
-            }
-        }
-    }
 }
 
 module.exports = Student; 

@@ -17,10 +17,5 @@ router.put('/:maSV', studentController.updateStudent);
 // Delete a student
 router.delete('/:maSV', studentController.deleteStudent);
 
-// Get student score
-router.get('/score/:maSV', studentController.getStudentScores);
-
-// Get student courses
-router.get('/courses/:maSV', studentController.getStudentCourses);
 
 module.exports = router; 
