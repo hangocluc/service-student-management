@@ -29,6 +29,82 @@ class Student {
         }
     }
 
+static async create(student) {
+        let connection;
+        try {
+            connection = await getConnection();
+
+            const newMaSV = await this.generateNextMaSV(connection);
+
+            const ngaySinhDate = student.ngaySinh ? new Date(student.ngaySinh) : null;
+
+            const result = await connection.execute(
+                `INSERT INTO SINHVIEN (MASV, HOTEN, NGAYSINH, GIOITINH, MALOP)
+                 VALUES (:masv, :hoten, :ngaysinh, :gioitinh, :malop)`,
+                {
+                    masv: newMaSV, // Use generated maSV
+                    hoten: student.hoTen,
+                    ngaysinh: ngaySinhDate,
+                    gioitinh: student.gioiTinh,
+                    malop: student.maLop
+                },
+                { autoCommit: true }
+            );
+            return { maSV: newMaSV, ...student };
+        } finally {
+            if (connection) {
+                await connection.close();
+            }
+        }
+    }
+
+    static async update(maSV, student) {
+        let connection;
+        try {
+            connection = await getConnection();
+            const ngaySinhDate = student.ngaySinh ? new Date(student.ngaySinh) : null;
+
+            const result = await connection.execute(
+                `UPDATE SINHVIEN
+                 SET HOTEN = :hoten,
+                     NGAYSINH = :ngaysinh,
+                     GIOITINH = :gioitinh,
+                     MALOP = :malop
+                 WHERE MASV = :masv`,
+                {
+                    masv: maSV,
+                    hoten: student.hoTen,
+                    ngaysinh: ngaySinhDate,
+                    gioitinh: student.gioiTinh,
+                    malop: student.maLop
+                },
+                { autoCommit: true }
+            );
+            return result;
+        } finally {
+             if (connection) {
+                await connection.close();
+            }
+        }
+    }
+
+    static async delete(maSV) {
+        let connection;
+        try {
+            connection = await getConnection();
+            const result = await connection.execute(
+                'DELETE FROM SINHVIEN WHERE MASV = :masv',
+                { masv: maSV },
+                { autoCommit: true }
+            );
+            return result;
+        } finally {
+             if (connection) {
+                await connection.close();
+            }
+        }
+    }
+
     static async findAll(searchParams = {}) {
         let connection;
         try {
@@ -104,88 +180,6 @@ class Student {
             return result.rows && result.rows.length > 0 ? result.rows[0] : null;
         } catch (error) {
             console.error('Error finding student:', error);
-            throw error;
-        } finally {
-            if (connection) {
-                await connection.close();
-            }
-        }
-    }
-
-    static async create(student) {
-        let connection;
-        try {
-            connection = await getConnection();
-            const ngaySinhDate = student.ngaySinh ? new Date(student.ngaySinh) : null;
-
-            const result = await connection.execute(
-                `INSERT INTO SINHVIEN (MASV, HOTEN, NGAYSINH, GIOITINH, MALOP) 
-                 VALUES (:maSV, :hoTen, :ngaySinh, :gioiTinh, :maLop)`,
-                {
-                    maSV: student.maSV,
-                    hoTen: student.hoTen,
-                    ngaySinh: ngaySinhDate,
-                    gioiTinh: student.gioiTinh,
-                    maLop: student.maLop
-                },
-                { autoCommit: true }
-            );
-            return { ...student };
-        } catch (error) {
-            console.error('Error creating student:', error);
-            throw error;
-        } finally {
-            if (connection) {
-                await connection.close();
-            }
-        }
-    }
-
-    static async update(maSV, student) {
-        let connection;
-        try {
-            connection = await getConnection();
-            const ngaySinhDate = student.ngaySinh ? new Date(student.ngaySinh) : null;
-
-            const result = await connection.execute(
-                `UPDATE SINHVIEN 
-                 SET HOTEN = :hoTen, 
-                     NGAYSINH = :ngaySinh, 
-                     GIOITINH = :gioiTinh, 
-                     MALOP = :maLop 
-                 WHERE MASV = :maSV`,
-                {
-                    maSV,
-                    hoTen: student.hoTen,
-                    ngaySinh: ngaySinhDate,
-                    gioiTinh: student.gioiTinh,
-                    maLop: student.maLop
-                },
-                { autoCommit: true }
-            );
-            return { maSV, ...student };
-        } catch (error) {
-            console.error('Error updating student:', error);
-            throw error;
-        } finally {
-            if (connection) {
-                await connection.close();
-            }
-        }
-    }
-
-    static async delete(maSV) {
-        let connection;
-        try {
-            connection = await getConnection();
-            const result = await connection.execute(
-                'DELETE FROM SINHVIEN WHERE MASV = :maSV',
-                { maSV },
-                { autoCommit: true }
-            );
-            return { maSV };
-        } catch (error) {
-            console.error('Error deleting student:', error);
             throw error;
         } finally {
             if (connection) {

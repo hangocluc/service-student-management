@@ -17,4 +17,4 @@ router.put('/:maLop', lopController.updateLop);
 // Delete Lop
 router.delete('/:maLop', lopController.deleteLop);
 
-module.exports = router; 
+module.exports = router;

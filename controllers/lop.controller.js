@@ -2,25 +2,15 @@ const Lop = require('../models/lop.model');
 
 exports.getAllLop = async (req, res) => {
     try {
-        const searchParams = {
-            maLop: req.query.maLop,
-            tenLop: req.query.tenLop,
-            maKhoa: req.query.maKhoa
-        };
-
-        const lopList = await Lop.findAll(searchParams);
+        const lopList = await Lop.findAll();
         res.json({
-            success: true,
-            code: 200,
-            message: null,
+            status: 'success',
             data: lopList
         });
     } catch (error) {
         res.status(500).json({
-            success: false,
-            code: 500,
-            message: error.message,
-            data: null
+            status: 'error',
+            message: error.message
         });
     }
 };
@@ -30,24 +20,18 @@ exports.getLopById = async (req, res) => {
         const lop = await Lop.findById(req.params.maLop);
         if (!lop) {
             return res.status(404).json({
-                success: false,
-                code: 404,
-                message: 'Lop not found',
-                data: null
+                status: 'error',
+                message: 'Lop not found'
             });
         }
         res.json({
-            success: true,
-            code: 200,
-            message: null,
+            status: 'success',
             data: lop
         });
     } catch (error) {
         res.status(500).json({
-            success: false,
-            code: 500,
-            message: error.message,
-            data: null
+            status: 'error',
+            message: error.message
         });
     }
 };
@@ -57,25 +41,20 @@ exports.createLop = async (req, res) => {
         const { maLop, tenLop, maKhoa } = req.body;
         if (!maLop || !tenLop || !maKhoa) {
             return res.status(400).json({
-                success: false,
-                code: 400,
-                message: 'maLop, tenLop, and maKhoa are required',
-                data: null
+                status: 'error',
+                message: 'maLop, tenLop, and maKhoa are required'
             });
         }
         const result = await Lop.create({ maLop, tenLop, maKhoa });
         res.status(201).json({
-            success: true,
-            code: 201,
+            status: 'success',
             message: 'Lop created successfully',
             data: result
         });
     } catch (error) {
         res.status(500).json({
-            success: false,
-            code: 500,
-            message: error.message,
-            data: null
+            status: 'error',
+            message: error.message
         });
     }
 };

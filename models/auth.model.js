@@ -4,7 +4,6 @@ const { getConnection } = require('../config/database');
 class Auth {
     static async validateCredentials(username, password) {
         try {
-            // Try to connect with provided credentials
             const testConfig = {
                 user: username,
                 password: password,
@@ -15,23 +14,21 @@ class Auth {
             try {
                 testConnection = await oracledb.getConnection(testConfig);
 
-                // If connection successful, return success
                 return {
                     success: true,
                     data: {
                         username: username,
-                        role: 'ADMIN' // Since they can connect to DB, they're admin
+                        role: 'ADMIN'
                     }
                 };
             } catch (error) {
-                // Check specific Oracle error codes
-                if (error.errorNum === 1017) { // ORA-01017: invalid username/password
+                if (error.errorNum === 1017) {
                     return {
                         success: false,
                         error: 'INVALID_CREDENTIALS',
                         message: 'Invalid username or password'
                     };
-                } else if (error.errorNum === 1018) { // ORA-01018: user not found
+                } else if (error.errorNum === 1018) {
                     return {
                         success: false,
                         error: 'USER_NOT_FOUND',

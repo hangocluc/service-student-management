@@ -4,11 +4,11 @@ exports.createStudent = async (req, res) => {
     try {
         const student = req.body;
         const result = await Student.create(student);
-        res.status(201).json({
-            success: true,
-            code: 201,
-            message: 'Student created successfully',
-            data: result
+        res.status(200).json({
+                    success: true,
+                    code: 200,
+                    message: null,
+                    data: result
         });
     } catch (error) {
         res.status(500).json({
